@@ -6,6 +6,7 @@ from collections import OrderedDict, defaultdict
 def reformat_json(
     path: str, 
     reverse=set(),
+    rename=dict(),
     keep=None,
 ):
     """    
@@ -13,6 +14,7 @@ def reformat_json(
     returns a list of records for `judges` (human, NLG eval metric) and another for `systems` (uncertainty quantifiers)
 
     reverse: name of the quantifiers that need to multiplied by -1 (that is, to turn them into expressions of certainty/confidence)
+    rename: key (old name) -> value (new name)
     keep: use this to keep only some judges/systems
     """    
 
@@ -33,8 +35,10 @@ def reformat_json(
             score = float(judgment)
             if rater in reverse:
                 score = -score
-                rater = f"neg_{rater}"
-            sys_rows[record['id']].append({'id': record['id'], 'rater': rater, 'label': None, 'score': score})
+                rater_name = f"neg_{rename.get(rater, rater)}"
+            else:
+                rater_name = rename.get(rater, rater)
+            sys_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': None, 'score': score})
         
         # Evgenia stores human/oracle judgments as key-value pairs in the record's root
         for rater in record.keys():
@@ -42,7 +46,7 @@ def reformat_json(
                 continue
             if rater.startswith('human_judge'):
                 label = record[rater].lower() == 'correct'
-                judge_rows[record['id']].append({'id': record['id'], 'rater': rater, 'label': label, 'score': float(label)})
+                judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
 
         # Evgenia stores automated judgments as key-value pairs under 'greedy_correctness'
         for rater, judgment in record['greedy_correctness'].items():                            
@@ -52,13 +56,14 @@ def reformat_json(
                     rater_name = f"{rater}/{key}"
                     if keep is not None and rater_name not in keep:
                         continue
+                    rater_name = f"{rename.get(rater, rater)}/{key}"
                     label = bool(value)
                     judge_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': label, 'score': float(label)})
             else:
                 if keep is not None and rater not in keep:
                     continue
                 label = bool(judgment)
-                judge_rows[record['id']].append({'id': record['id'], 'rater': rater, 'label': label, 'score': float(label)})
+                judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
         
     return judge_rows, sys_rows
 
@@ -148,3 +153,6 @@ class Dataset:
                 if stderr == 0.:
                     stderr = 1.
                 self.X[i] = (self.X[i] - loc) / stderr
+
+
+

@@ -8,6 +8,9 @@ def reformat_json(
     reverse=set(),
     rename=dict(),
     keep=None,
+    skip_all_oracle_judges=False,
+    skip_all_nonoracle_judges=False,
+    skip_all_quantifiers=False,
 ):
     """    
     parses the records in a json file (formatted by Evgenia)
@@ -27,43 +30,46 @@ def reformat_json(
 
 
         # Evgenia stores uncertainty quantifiers under 
-        for rater, judgment in record['uncertainty']['uncertainty_scores'].items():             
-            if keep is not None and rater not in keep:
-                continue
-            if isinstance(judgment, str) and judgment.startswith("Confidence:"):
-                judgment = judgment.strip("Confidence:")
-            score = float(judgment)
-            if rater in reverse:
-                score = -score
-                rater_name = f"neg_{rename.get(rater, rater)}"
-            else:
-                rater_name = rename.get(rater, rater)
-            sys_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': None, 'score': score})
-        
-        # Evgenia stores human/oracle judgments as key-value pairs in the record's root
-        for rater in record.keys():
-            if keep is not None and rater not in keep:
-                continue
-            if rater.startswith('human_judge'):
-                label = record[rater].lower() == 'correct'
-                judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
-
-        # Evgenia stores automated judgments as key-value pairs under 'greedy_correctness'
-        for rater, judgment in record['greedy_correctness'].items():                            
-            # Some judgments depend on a threshold, Evgenia stores those (and the respective labels) in a dictionary
-            if isinstance(judgment, dict):
-                for key, value in judgment.items():
-                    rater_name = f"{rater}/{key}"
-                    if keep is not None and rater_name not in keep:
-                        continue
-                    rater_name = f"{rename.get(rater, rater)}/{key}"
-                    label = bool(value)
-                    judge_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': label, 'score': float(label)})
-            else:
+        if not skip_all_quantifiers:
+            for rater, judgment in record['uncertainty']['uncertainty_scores'].items():             
                 if keep is not None and rater not in keep:
                     continue
-                label = bool(judgment)
-                judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
+                if isinstance(judgment, str) and judgment.startswith("Confidence:"):
+                    judgment = judgment.strip("Confidence:")
+                score = float(judgment)
+                if rater in reverse:
+                    score = -score
+                    rater_name = f"neg_{rename.get(rater, rater)}"
+                else:
+                    rater_name = rename.get(rater, rater)
+                sys_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': None, 'score': score})
+        
+        # Evgenia stores human/oracle judgments as key-value pairs in the record's root
+        if not skip_all_oracle_judges:
+            for rater in record.keys():
+                if keep is not None and rater not in keep:
+                    continue
+                if rater.startswith('human_judge'):
+                    label = record[rater].lower() == 'correct'
+                    judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
+
+        # Evgenia stores automated judgments as key-value pairs under 'greedy_correctness'
+        if not skip_all_nonoracle_judges:
+            for rater, judgment in record['greedy_correctness'].items():                            
+                # Some judgments depend on a threshold, Evgenia stores those (and the respective labels) in a dictionary
+                if isinstance(judgment, dict):
+                    for key, value in judgment.items():
+                        rater_name = f"{rater}/{key}"
+                        if keep is not None and rater_name not in keep:
+                            continue
+                        rater_name = f"{rename.get(rater, rater)}/{key}"
+                        label = bool(value)
+                        judge_rows[record['id']].append({'id': record['id'], 'rater': rater_name, 'label': label, 'score': float(label)})
+                else:
+                    if keep is not None and rater not in keep:
+                        continue
+                    label = bool(judgment)
+                    judge_rows[record['id']].append({'id': record['id'], 'rater': rename.get(rater, rater), 'label': label, 'score': float(label)})
         
     return judge_rows, sys_rows
 

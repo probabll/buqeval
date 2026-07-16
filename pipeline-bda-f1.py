@@ -540,23 +540,11 @@ if __name__ == '__main__':
     ]
     generators = [
         'llama-8b-instruct',
+        'llama-3b-instruct',
         'qwen-7b-instruct',
-        'qwen-0.5b-instruct'
+        'qwen-0.5b-instruct',
     ]
-    # datasets = [
-    #     'trivia_qa_llama-8b-instruct',
-    #     'trivia_qa_qwen-7b-instruct',
-    #     'trivia_qa_qwen-0.5b-instruct',
-    #     'ambig_qa_multiple_qas_llama-3b-instruct',
-    #     'ambig_qa_multiple_qas_llama-8b-instruct',
-    #     'ambig_qa_multiple_qas_qwen-0.5b-instruct',
-    #     'ambig_qa_multiple_qas_qwen-7b-instruct',
-    #     'ambig_qa_single_answer_llama-3b-instruct',
-    #     'ambig_qa_single_answer_llama-8b-instruct',
-    #     'ambig_qa_single_answer_qwen-0.5b-instruct',
-    #     'ambig_qa_single_answer_qwen-7b-instruct'
-    # ]
-
+    
     for dataset in datasets:
         for generator in generators:
             name = f"{dataset}_{generator}"
@@ -566,5 +554,4 @@ if __name__ == '__main__':
                 output_folder="inlg2026",
                 title_prefix=f"dataset={dataset} generator={generator} | ",
             )
-            break
-        break
+            

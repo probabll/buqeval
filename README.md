@@ -3,7 +3,7 @@
 Use python3.14
 
 ```bash
-pip install numpyro arviz seaborn pandas scikit-learn
+pip install jax numpyro arviz seaborn pandas scikit-learn
 ```
 
 Download [rbo.py](https://github.com/dlukes/rbo)

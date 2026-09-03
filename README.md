@@ -6,6 +6,11 @@ Use python3.14
 pip install jax numpyro arviz seaborn pandas scikit-learn
 ```
 
+For some post-processing of plots:
+```bash
+pip install pdfCropMargins
+```
+
 Download [rbo.py](https://github.com/dlukes/rbo)
 
 # Guide
